@@ -1,82 +1,116 @@
 from abc import ABC, abstractmethod
 from datetime import date
 
+
 class Historico:
-    def adicionar_transacao(self):
-    pass
+    def __init__(self) -> None:
+        self._transacoes:list = []
+    def adicionar_transacao(self, transacao:"Transacao"):
+        self._transacoes.append(transacao)
 
-class Deposito:
-    valor:float = 0
-    pass
-
-class Saque:
-    valor:float = 0
-    pass
 
 class Cliente:
     def __init__(
         self,
         endereco:str,
-        contas:list
-         
         ):
-        pass
-    
-    def adicionar_conta(conta:Conta):
-        pass
+        self._endereco = endereco
+        self._contas = []
 
+    def adicionar_conta(self, conta:"Conta"):
+        self._contas.append(conta)
 
+    def realizar_transacao(self, conta:"Conta", transacao:"Transacao"):
+        transacao.registrar(conta)
 
 class Conta:
     def __init__(
-        self, 
-        saldo:float, 
-        numero:int, 
-        agencia:str, 
-        cliente:Cliente, 
-        historico:Historico
+        self,
+        numero:int,
+        agencia:str,
+        cliente:Cliente,
         ):
-        pass
-    
-    def saldo()->float:
-        pass
-    
+        self._saldo:float = 0
+        self._historico:Historico = Historico()
+        self._agencia = agencia
+        self._numero = numero
+        self._cliente = cliente
+
+    @property
+    def saldo(self)->float:
+        return self._saldo
+
+    @classmethod
     def nova_conta(
-        cliente:Cliente, 
+        cls,
+        cliente:Cliente,
         numero:int
-        ) -> Conta:
-        pass
-    
-    def sacar(valor:float) -> bool:
-        pass
-    
-    def depositar(valor:float) -> bool:
-        pass
+        ):
+        return cls(cliente=cliente, numero = numero, agencia = "1000")
+
+    def sacar(self, valor:float) -> bool:
+        if valor > self._saldo:
+            return False
+
+        self._saldo -= valor
+        return True;
+
+    def depositar(self, valor:float) -> bool:
+        if valor <= 0:
+            return False
+        self._saldo += valor
+        return True;
+
 
 # interface
 class Transacao(ABC):
     @abstractmethod
-    def registrar(conta:Conta):
+    def registrar(self, conta:Conta):
         pass
 
+class Deposito(Transacao):
+    def __init__(self, valor:float) -> None:
+        self._valor = valor
+
+    def registrar(self, conta:Conta):
+        if conta.depositar(self._valor):
+            conta._historico.adicionar_transacao(self)
+
+
+class Saque(Transacao):
+    def __init__(self, valor:float) -> None:
+        self._valor = valor
+
+    def registrar(self, conta:Conta):
+        if conta.sacar(self._valor):
+                conta._historico.adicionar_transacao(self)
 
 class ContaCorrente(Conta):
-    limite:float = 0
-    limite_saques:int = 0
-    
-    def __init__(self, saldo, numero, agencia, cliente, historico):
-        super().__init__(saldo, numero, agencia, cliente, historico)
+    def __init__(
+            self,
+            numero,
+            agencia,
+            cliente,
+            limite,
+            limite_saques):
+
+        super().__init__( numero, agencia, cliente)
+        self._limite:float = limite
+        self._limite_saques:int = limite_saques
     pass
 
-
-
-class PessoaFisica:
+class PessoaFisica(Cliente):
     def __init__(
         self,
         cpf:str,
         nome:str,
-        data_nascimento: date
+        data_nascimento: date,
+        endereco:str
         ):
-        pass
+            super().__init__(endereco)
+            self._cpf = cpf
+            self._nome = nome
+            self._data_nascimento = data_nascimento
+            pass
     pass
 
